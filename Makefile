@@ -4,10 +4,14 @@ LDFLAGS = -pthread
 
 TARGET = redis_clone
 TEST_TARGET = redis_test
+BENCHMARK_TARGET = redis_benchmark
 SOURCES = redis_clone.cpp
 TEST_SOURCES = redis_test.cpp
+BENCHMARK_SOURCES = redis_benchmark.cpp
 
-.PHONY: all clean test run benchmark
+.PHONY: all clean test run benchmark_custom benchmark
+
+all: $(TARGET) $(TEST_TARGET) $(BENCHMARK_TARGET)
 
 all: $(TARGET) $(TEST_TARGET)
 
@@ -17,11 +21,20 @@ $(TARGET): $(SOURCES)
 $(TEST_TARGET): $(TEST_SOURCES)
 	$(CXX) $(CXXFLAGS) -o $(TEST_TARGET) $(TEST_SOURCES) $(LDFLAGS)
 
+$(BENCHMARK_TARGET): $(BENCHMARK_SOURCES)
+	$(CXX) $(CXXFLAGS) -o $(BENCHMARK_TARGET) $(BENCHMARK_SOURCES) $(LDFLAGS)
+
 test: $(TEST_TARGET)
 	@echo "Make sure Redis clone server is running on port 6379"
 	@echo "Run './redis_clone' in another terminal first"
 	@sleep 1
 	./$(TEST_TARGET)
+
+benchmark_custom: $(BENCHMARK_TARGET)
+	@echo "Make sure Redis clone server is running on port 6379"
+	@echo "Run './redis_clone' in another terminal first"
+	@sleep 1
+	./$(BENCHMARK_TARGET)
 
 run: $(TARGET)
 	./$(TARGET)
@@ -35,7 +48,7 @@ benchmark: $(TARGET)
 	@pkill redis_clone || true
 
 clean:
-	rm -f $(TARGET) $(TEST_TARGET)
+	rm -f $(TARGET) $(TEST_TARGET) $(BENCHMARK_TARGET)
 
 install_deps_macos:
 	@echo "Installing dependencies for macOS..."
@@ -50,11 +63,12 @@ release: $(TARGET)
 
 help:
 	@echo "Available targets:"
-	@echo "  all          - Build both server and test client"
-	@echo "  run          - Start the Redis clone server"
-	@echo "  test         - Run the test suite (server must be running)"
-	@echo "  benchmark    - Run performance benchmark"
-	@echo "  debug        - Build with debug symbols"
-	@echo "  release      - Build optimized release version"
-	@echo "  clean        - Remove compiled binaries"
+	@echo "  all              - Build server, test client, and benchmark"
+	@echo "  run              - Start the Redis clone server"
+	@echo "  test             - Run the test suite (server must be running)"
+	@echo "  benchmark        - Run performance benchmark with redis-benchmark"
+	@echo "  benchmark_custom - Run custom performance benchmark suite"
+	@echo "  debug            - Build with debug symbols"
+	@echo "  release          - Build optimized release version"
+	@echo "  clean            - Remove compiled binaries"
 	@echo "  install_deps_macos - Install Redis tools on macOS"
